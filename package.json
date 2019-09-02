@@ -3,14 +3,15 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "react-native start",
+    "start": "react-native run-android",
     "test": "jest",
     "lint": "eslint ."
   },
   "dependencies": {
     "react": "16.9.0",
     "react-native": "0.60.5",
-    "@react-native-community/geolocation": "2.0.2"
+    "@react-native-community/geolocation": "2.0.2",
+    "geolib": "3.0.4"
   },
   "devDependencies": {
     "@babel/core": "7.5.5",
