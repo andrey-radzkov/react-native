@@ -11,7 +11,8 @@
     "react": "16.9.0",
     "react-native": "0.60.5",
     "@react-native-community/geolocation": "2.0.2",
-    "geolib": "3.0.4"
+    "geolib": "3.0.4",
+    "react-native-immediate-phone-call": "1.0.0"
   },
   "devDependencies": {
     "@babel/core": "7.5.5",

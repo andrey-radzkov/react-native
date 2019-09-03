@@ -1,8 +1,8 @@
 import React, { Component } from 'react'
-import { View, Text, Switch, StyleSheet, PermissionsAndroid,AsyncStorage ,} from 'react-native'
+import { View, Text, Switch, StyleSheet, PermissionsAndroid,AsyncStorage ,Linking,Button ,} from 'react-native'
 import Geolocation from '@react-native-community/geolocation';
 import getDistance from 'geolib/es/getDistance';
-
+import RNImmediatePhoneCall from 'react-native-immediate-phone-call';
 export class SwitchExample extends Component {
    state = {
       initialPosition: 'unknown',
@@ -34,12 +34,11 @@ export class SwitchExample extends Component {
                 if(position && position.coords ){
                     var distance =  getDistance(
                                         { latitude: position.coords.latitude, longitude: position.coords.longitude },
-                                         //{ latitude: 53.8841564, longitude: 27.4491562 },
+//                                         { latitude: 53.8841564, longitude: 27.4491562 },
                                           { latitude: 53.91783263, longitude: 27.59183951 },
                                     );
                     if(distance<120){
-    //                alert("we are at home");
-                        alert("we are at work"); // TODO: remember about accuracy
+//                        this.call() // TODO: remember about accuracy
                     }
                     this.setState({ lastPosition ,distance,latitude: position.coords.latitude,longitude: position.coords.longitude});
                 }
@@ -53,6 +52,18 @@ export class SwitchExample extends Component {
    }
    componentWillUnmount = () => {
       Geolocation.clearWatch(this.watchID);
+   }
+   call=()=>{
+     PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.CALL_PHONE,
+            {
+              title: "Auto call permission",
+              message: "App needs access to call"
+            }
+          ).then((granted)=>{
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                RNImmediatePhoneCall.immediatePhoneCall('+123456789');
+                }});
    }
    render() {
       return (
@@ -90,6 +101,10 @@ export class SwitchExample extends Component {
               <Text>
                   {this.state.longitude}
                </Text>
+               <Button
+                title="Call"
+                accessibilityLabel="Learn more about this purple button"
+                onPress={this.call}/>
          </View>
       )
    }
@@ -99,7 +114,8 @@ const styles = StyleSheet.create ({
    container: {
       flex: 1,
       alignItems: 'center',
-      marginTop: 50
+      marginTop: 50,
+      marginBottom: 50,
    },
    boldText: {
       fontSize: 30,
