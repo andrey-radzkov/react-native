@@ -7,7 +7,7 @@ import Contacts from 'react-native-contacts';
 import { gyroscope, setUpdateIntervalForType ,SensorTypes  } from "react-native-sensors";
 import { map, filter } from "rxjs/operators";
 
-setUpdateIntervalForType(SensorTypes.gyroscope, 100);
+setUpdateIntervalForType(SensorTypes.gyroscope, 50);
 export class SwitchExample extends Component {
    state = {
       initialPosition: 'unknown',
