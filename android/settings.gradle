@@ -1,4 +1,5 @@
 rootProject.name = 'AwesomeProjectNative'
 apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
-include ':react-native-immediate-phone-call', ':app'
+include ':react-native-immediate-phone-call',':react-native-contacts', ':app'
 project(':react-native-immediate-phone-call').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-immediate-phone-call/android')
+project(':react-native-contacts').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-contacts/android')

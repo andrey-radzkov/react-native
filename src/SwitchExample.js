@@ -3,6 +3,7 @@ import { View, Text, Switch, StyleSheet, PermissionsAndroid,AsyncStorage ,Linkin
 import Geolocation from '@react-native-community/geolocation';
 import getDistance from 'geolib/es/getDistance';
 import RNImmediatePhoneCall from 'react-native-immediate-phone-call';
+import Contacts from 'react-native-contacts';
 export class SwitchExample extends Component {
    state = {
       initialPosition: 'unknown',
@@ -10,6 +11,7 @@ export class SwitchExample extends Component {
       distance: 'unknown',
       latitude: 'unknown',
       longitude: 'unknown',
+      parking: 'unknown',
    }
    watchID = null;
    componentDidMount = () => {
@@ -62,7 +64,28 @@ export class SwitchExample extends Component {
             }
           ).then((granted)=>{
             if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-                RNImmediatePhoneCall.immediatePhoneCall('+123456789');
+           PermissionsAndroid.request(
+             PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+             {
+               'title': 'Contacts',
+               'message': 'This app would like to view your contacts.'
+             }
+           ).then(() => {
+             Contacts.getAll((err, contacts) => {
+               if (err === 'denied'){
+                 // error
+               } else {
+//               var parking = contacts.filter(contact=>contact.displayName==='Парковка');
+               var parking = contacts.filter(contact=>contact.displayName==='Жена');
+               var parkingNumber = parking[0].phoneNumbers[0].number;
+                  this.setState({parking:parkingNumber});
+                RNImmediatePhoneCall.immediatePhoneCall(parkingNumber);
+
+               }
+             })
+           })
+
+//                RNImmediatePhoneCall.immediatePhoneCall('+123456789');
                 }});
    }
    render() {
@@ -105,6 +128,13 @@ export class SwitchExample extends Component {
                 title="Call"
                 accessibilityLabel="Learn more about this purple button"
                 onPress={this.call}/>
+                 <Text style = {styles.boldText}>
+                                 parking:
+                              </Text>
+                              <Text>
+                                  {this.state.parking}
+                               </Text>
+
          </View>
       )
    }
