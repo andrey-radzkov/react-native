@@ -4,6 +4,10 @@ import Geolocation from '@react-native-community/geolocation';
 import getDistance from 'geolib/es/getDistance';
 import RNImmediatePhoneCall from 'react-native-immediate-phone-call';
 import Contacts from 'react-native-contacts';
+import { gyroscope, setUpdateIntervalForType ,SensorTypes  } from "react-native-sensors";
+import { map, filter } from "rxjs/operators";
+
+setUpdateIntervalForType(SensorTypes.gyroscope, 100);
 export class SwitchExample extends Component {
    state = {
       initialPosition: 'unknown',
@@ -12,6 +16,8 @@ export class SwitchExample extends Component {
       latitude: 'unknown',
       longitude: 'unknown',
       parking: 'unknown',
+      gyroscope: 'unknown',
+      magnetometer: 'unknown',
    }
    watchID = null;
    componentDidMount = () => {
@@ -50,6 +56,17 @@ export class SwitchExample extends Component {
              );
              }
        });
+   var grad = 57.3;
+        gyroscope.subscribe(({ x, y, z, timestamp  }) => {
+ //TODO: we should use y axel
+
+                 this.setState({
+                   gyroscope: `x: ${(x * grad).toFixed(3)}
+                               y: ${(y * grad).toFixed(3)}
+                               z: ${(z * grad).toFixed(3)}`
+                 });
+               });
+
 
    }
    componentWillUnmount = () => {
@@ -134,6 +151,13 @@ export class SwitchExample extends Component {
                               <Text>
                                   {this.state.parking}
                                </Text>
+                               <Text style = {styles.boldText}>
+                                 gyroscope:
+                              </Text>
+                              <Text>
+                                  {this.state.gyroscope}
+                               </Text>
+
 
          </View>
       )

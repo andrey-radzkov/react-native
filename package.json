@@ -13,6 +13,8 @@
     "@react-native-community/geolocation": "2.0.2",
     "geolib": "3.0.4",
     "react-native-contacts": "5.0.2",
+    "react-native-sensors": "5.3.1",
+    "rxjs-operators": "1.1.2",
     "react-native-immediate-phone-call": "1.0.0"
   },
   "devDependencies": {
