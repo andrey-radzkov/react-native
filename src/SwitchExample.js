@@ -6,18 +6,17 @@ import RNImmediatePhoneCall from 'react-native-immediate-phone-call';
 import Contacts from 'react-native-contacts';
 import { gyroscope, setUpdateIntervalForType ,SensorTypes  } from "react-native-sensors";
 import { map, filter } from "rxjs/operators";
-
-setUpdateIntervalForType(SensorTypes.gyroscope, 50);
+const refreshInterval = 80;
+setUpdateIntervalForType(SensorTypes.gyroscope, refreshInterval);
 export class SwitchExample extends Component {
    state = {
-      initialPosition: 'unknown',
       lastPosition: 'unknown',
       distance: 'unknown',
       latitude: 'unknown',
       longitude: 'unknown',
       parking: 'unknown',
       gyroscope: 'unknown',
-      magnetometer: 'unknown',
+      angleY: 0.0,
    }
    watchID = null;
    componentDidMount = () => {
@@ -29,14 +28,7 @@ export class SwitchExample extends Component {
          }
        ).then((granted)=>{
          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-             Geolocation.getCurrentPosition(
-                (position) => {
-                   const initialPosition = JSON.stringify(position);
-                   this.setState({ initialPosition });
-                },
-                (error) => alert("initial: " + error.message),
-                { enableHighAccuracy: true, timeout: 30000, maximumAge: 1000 , distanceFilter: 5}
-             );
+
              this.watchID = Geolocation.watchPosition((position) => {
                 const lastPosition = JSON.stringify(position);
                 if(position && position.coords ){
@@ -59,11 +51,13 @@ export class SwitchExample extends Component {
    var grad = 57.3;
         gyroscope.subscribe(({ x, y, z, timestamp  }) => {
  //TODO: we should use y axel
+                var angleY = this.state.angleY;
 
                  this.setState({
                    gyroscope: `x: ${(x * grad).toFixed(3)}
                                y: ${(y * grad).toFixed(3)}
-                               z: ${(z * grad).toFixed(3)}`
+                               z: ${(z * grad).toFixed(3)}`,
+                   angleY: (angleY + (y * grad) * (1.0/(1000 / refreshInterval)))
                  });
                });
 
@@ -108,15 +102,7 @@ export class SwitchExample extends Component {
    render() {
       return (
          <View style = {styles.container}>
-            <Text style = {styles.boldText}>
-               Initial position:
-            </Text>
-
-            <Text>
-               {this.state.initialPosition}
-            </Text>
-
-            <Text style = {styles.boldText}>
+                       <Text style = {styles.boldText}>
                Current position:
             </Text>
 
@@ -156,6 +142,12 @@ export class SwitchExample extends Component {
                               </Text>
                               <Text>
                                   {this.state.gyroscope}
+                               </Text>
+                                <Text style = {styles.boldText}>
+                                 Angle Y:
+                              </Text>
+                              <Text>
+                                  {parseFloat(this.state.angleY).toFixed(3)}
                                </Text>
 
 
