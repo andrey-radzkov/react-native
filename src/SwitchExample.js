@@ -61,13 +61,7 @@ export class SwitchExample extends Component {
    render() {
       return (
          <View style = {styles.container}>
-                       <Text style = {styles.boldText}>
-               Current position:
-            </Text>
 
-            <Text>
-               {this.state.lastPosition}
-            </Text>
             <Text style = {styles.boldText}>
                Distance:
             </Text>

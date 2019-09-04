@@ -8,6 +8,13 @@ import { gyroscope, setUpdateIntervalForType ,SensorTypes  } from "react-native-
 import { map, filter } from "rxjs/operators";
 const refreshInterval = 80;
 setUpdateIntervalForType(SensorTypes.gyroscope, refreshInterval);
+
+ var steps=[
+ {executed:false, minSecToNext: 2,maxSecToNext: 120,   coordinate:{ latitude: 53.91783263, longitude: 27.59183951 }},
+ {executed:false,  minSecToNext: 2, maxSecToNext: 120, coordinate:{ latitude: 53.91783263, longitude: 27.59183951 }},
+ {executed:false, angleY: 90.0}]
+
+ var startTime = null;
  var watchID = null;
 export const startDetector = (component) => {
  PermissionsAndroid.request(
@@ -22,14 +29,18 @@ export const startDetector = (component) => {
              watchID = Geolocation.watchPosition((position) => {
                 const lastPosition = JSON.stringify(position);
                 if(position && position.coords ){
-                    var distance =  getDistance(
-                                        { latitude: position.coords.latitude, longitude: position.coords.longitude },
-//                                         { latitude: 53.8841564, longitude: 27.4491562 },
-                                          { latitude: 53.91783263, longitude: 27.59183951 },
-                                    );
-                    if(distance<120){
-//                        this.call() // TODO: remember about accuracy
+                    var step = steps.filter(step=>!step.executed && coordinate);
+                    var distance = 0
+                    if(step[0]){
+                        distance =  getDistance(
+                                              { latitude: position.coords.latitude, longitude: position.coords.longitude },
+                                               step[0].coordinate);
+                                            if(distance<120){
+                        //                        this.call() // TODO: remember about accuracy
+                                            }
                     }
+
+
                     component.setState({ lastPosition ,distance,latitude: position.coords.latitude,longitude: position.coords.longitude});
                 }
              },
@@ -38,7 +49,7 @@ export const startDetector = (component) => {
              );
              }
        });
-   var grad = 57.3;
+   var grad = 57.2957795131;
         gyroscope.subscribe(({ x, y, z, timestamp  }) => {
                 //TODO: we should use y axel
                 var angleY = component.state.angleY;
