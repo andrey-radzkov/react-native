@@ -10,12 +10,13 @@ const refreshInterval = 80;
 setUpdateIntervalForType(SensorTypes.gyroscope, refreshInterval);
 
  var steps=[
- {executed:false, minSecToNext: 2,maxSecToNext: 120,   coordinate:{ latitude: 53.91783263, longitude: 27.59183951 }},
- {executed:false,  minSecToNext: 2, maxSecToNext: 120, coordinate:{ latitude: 53.91783263, longitude: 27.59183951 }},
+ {executed:false, minSecToNext: 2,maxSecToNext: 120,   coordinate:{ latitude: 53.9174858, longitude: 27.5903552 }, label: "One"},
+ {executed:false,  minSecToNext: 2, maxSecToNext: 120, coordinate:{ latitude: 53.9182948, longitude: 27.589353 }, label: "Two"},
  {executed:false, angleY: 90.0}]
 
  var startTime = null;
  var watchID = null;
+
 export const startDetector = (component) => {
  PermissionsAndroid.request(
          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -29,19 +30,29 @@ export const startDetector = (component) => {
              watchID = Geolocation.watchPosition((position) => {
                 const lastPosition = JSON.stringify(position);
                 if(position && position.coords ){
-                    var step = steps.filter(step=>!step.executed && coordinate);
-                    var distance = 0
+                    var step = steps.filter(step=>!step.executed );
+                    var distance = 0;
+                    var stepLabel = null
                     if(step[0]){
-                        distance =  getDistance(
+                        if(step[0].coordinate){
+                            distance =  getDistance(
                                               { latitude: position.coords.latitude, longitude: position.coords.longitude },
                                                step[0].coordinate);
-                                            if(distance<120){
-                        //                        this.call() // TODO: remember about accuracy
+                                            if(distance<Math.min(30, position.coords.accuracy)){ //tDOO check time
+                                            step[0].executed = true;
+                                            stepLabel = step[0].label;
+                            //                        this.call() // TODO: remember about accuracy
                                             }
+                         } else {
+                                //tODO: gyroscope
+                         }
                     }
 
-
-                    component.setState({ lastPosition ,distance,latitude: position.coords.latitude,longitude: position.coords.longitude});
+                    var newState={ lastPosition ,distance,latitude: position.coords.latitude,longitude: position.coords.longitude};
+                    if(stepLabel){
+                        newState.stepLabel = stepLabel;
+                    }
+                    component.setState(stepLabel);
                 }
              },
                        (error) => alert("current: " + error.message),

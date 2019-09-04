@@ -17,6 +17,7 @@ export class SwitchExample extends Component {
       parking: 'unknown',
       gyroscope: 'unknown',
       angleY: 0.0,
+      stepLabel: "Not started",
    }
 
    componentDidMount = () => {
@@ -62,6 +63,12 @@ export class SwitchExample extends Component {
       return (
          <View style = {styles.container}>
 
+            <Text style = {styles.boldText}>
+               Step:
+            </Text>
+            <Text>
+               {this.state.stepLabel}
+            </Text>
             <Text style = {styles.boldText}>
                Distance:
             </Text>
