@@ -18,17 +18,26 @@ setUpdateIntervalForType(SensorTypes.gyroscope, refreshInterval);
  var watchID = null;
 
 export const startDetector = (component) => {
- PermissionsAndroid.request(
+ return PermissionsAndroid.request(
          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
          {
            title: "Location Accessing Permission",
            message: "App needs access to your location"
          }
        ).then((granted)=>{
+//        alert("results: " + granted);
          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-
+            //don`t know why we need this but we need...
+            Geolocation.getCurrentPosition(
+                (position) => {
+                   component.setState({ latitude: position.coords.latitude,longitude: position.coords.longitude });
+                },
+                (error) => alert("initial: " + error.message),
+                { enableHighAccuracy: true, timeout: 30000, maximumAge: 1000 , distanceFilter: 5}
+             );
              watchID = Geolocation.watchPosition((position) => {
                 const lastPosition = JSON.stringify(position);
+//                alert("we are in " + lastPosition);
                 if(position && position.coords ){
                     var step = steps.filter(step=>!step.executed );
                     var distance = 0;
@@ -52,26 +61,27 @@ export const startDetector = (component) => {
                     if(stepLabel){
                         newState.stepLabel = stepLabel;
                     }
-                    component.setState(stepLabel);
+                    component.setState(newState);
                 }
              },
                        (error) => alert("current: " + error.message),
                        { enableHighAccuracy: true, timeout: 30000, maximumAge: 1000 , distanceFilter: 5}
              );
              }
-       });
-   var grad = 57.2957795131;
-        gyroscope.subscribe(({ x, y, z, timestamp  }) => {
-                //TODO: we should use y axel
-                var angleY = component.state.angleY;
+             var grad = 57.2957795131;
+                     gyroscope.subscribe(({ x, y, z, timestamp  }) => {
+                             //TODO: we should use y axel
+                             var angleY = component.state.angleY;
 
-                 component.setState({
-                   gyroscope: `x: ${(x * grad).toFixed(3)}
-                               y: ${(y * grad).toFixed(3)}
-                               z: ${(z * grad).toFixed(3)}`,
-                   angleY: (angleY + (y * grad) * (1.0/(1000 / refreshInterval)))
-                 });
-               });
+                              component.setState({
+                                gyroscope: `x: ${(x * grad).toFixed(3)}
+                                            y: ${(y * grad).toFixed(3)}
+                                            z: ${(z * grad).toFixed(3)}`,
+                                angleY: (angleY + (y * grad) * (1.0/(1000 / refreshInterval)))
+                              });
+                            });
+       });
+
 
 }
 
