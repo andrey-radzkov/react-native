@@ -10,13 +10,13 @@ const refreshInterval = 80;
 setUpdateIntervalForType(SensorTypes.gyroscope, refreshInterval);
 
  var steps=[
- {executed:false, minSecToNext: 2,maxSecToNext: 120,   coordinate:{ latitude: 53.9174858, longitude: 27.5903552 }, label: "One"},
- {executed:false,  minSecToNext: 2, maxSecToNext: 120, coordinate:{ latitude: 53.9182948, longitude: 27.589353 }, label: "Two"},
- {executed:false, angleY: 90.0}]
+ {executed:false, minSecToNext: 2,maxSecToNext: 120,   coordinate:{ latitude: 53.917537065078584, longitude: 27.590843470480717 }, label: "One"},
+ {executed:false,  minSecToNext: 2, maxSecToNext: 120, coordinate:{ latitude: 53.91831029348834, longitude: 27.589849082844445 }, label: "Two"},
+ {executed:false, angleY: 90.0, label: "Three"}]
 
  var startTime = null;
  var watchID = null;
-
+ var grad = 57.2957795131;
 export const startDetector = (component) => {
  return PermissionsAndroid.request(
          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -47,17 +47,29 @@ export const startDetector = (component) => {
                             distance =  getDistance(
                                               { latitude: position.coords.latitude, longitude: position.coords.longitude },
                                                step[0].coordinate);
-                                            if(distance<Math.min(30, position.coords.accuracy)){ //tDOO check time
+                                            if(distance<Math.max(Math.min(40, position.coords.accuracy), 15)){ //tDOO check time
                                             step[0].executed = true;
                                             stepLabel = step[0].label;
                             //                        this.call() // TODO: remember about accuracy
                                             }
-                         } else {
-                                //tODO: gyroscope
+                         } else if(step[0].angleY){
+
+                                gyroscope.subscribe(({ x, y, z, timestamp  }) => {
+                             //TODO: we should use y axel
+                                    var angleY = component.state.angleY;
+                                    if(angleY>step[0].angleY*0.85){
+                                        step[0].executed = true;
+                                        stepLabel=step[0].label;
+                                    }
+                                    component.setState({
+                                        gyroscope: `y: ${(y * grad).toFixed(3)}`,
+                                        angleY: (angleY + (y * grad) * (1.0/(1000 / refreshInterval)))
+                                    });
+                            });
                          }
                     }
 
-                    var newState={ lastPosition ,distance,latitude: position.coords.latitude,longitude: position.coords.longitude};
+                    var newState={ lastPosition ,distance,latitude: position.coords.latitude,longitude: position.coords.longitude, accuracy:`real: ${position.coords.accuracy}; my: ${Math.max(Math.min(40, position.coords.accuracy), 15)}`};
                     if(stepLabel){
                         newState.stepLabel = stepLabel;
                     }
@@ -68,18 +80,7 @@ export const startDetector = (component) => {
                        { enableHighAccuracy: true, timeout: 30000, maximumAge: 1000 , distanceFilter: 5}
              );
              }
-             var grad = 57.2957795131;
-                     gyroscope.subscribe(({ x, y, z, timestamp  }) => {
-                             //TODO: we should use y axel
-                             var angleY = component.state.angleY;
 
-                              component.setState({
-                                gyroscope: `x: ${(x * grad).toFixed(3)}
-                                            y: ${(y * grad).toFixed(3)}
-                                            z: ${(z * grad).toFixed(3)}`,
-                                angleY: (angleY + (y * grad) * (1.0/(1000 / refreshInterval)))
-                              });
-                            });
        });
 
 

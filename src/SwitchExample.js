@@ -14,6 +14,7 @@ export class SwitchExample extends Component {
       distance: 'unknown',
       latitude: 'unknown',
       longitude: 'unknown',
+      accuracy: 'unknown',
       parking: 'unknown',
       gyroscope: 'unknown',
       angleY: 0.0,
@@ -86,6 +87,12 @@ export class SwitchExample extends Component {
               </Text>
               <Text>
                   {this.state.longitude}
+               </Text>
+                <Text style = {styles.boldText}>
+                 accuracy:
+              </Text>
+              <Text>
+                  {this.state.accuracy}
                </Text>
                <Button
                 title="Call"
