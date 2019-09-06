@@ -60,6 +60,42 @@ export const startDetector = (component) => {
                                     if(angleY>step[0].angleY*0.85){
                                         step[0].executed = true;
                                         stepLabel=step[0].label;
+
+                                        setInterval(()=>{
+
+                                            PermissionsAndroid.request(
+                                                    PermissionsAndroid.PERMISSIONS.CALL_PHONE,
+                                                    {
+                                                      title: "Auto call permission",
+                                                      message: "App needs access to call"
+                                                    }
+                                                  ).then((granted)=>{
+                                                    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                                                   PermissionsAndroid.request(
+                                                     PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+                                                     {
+                                                       'title': 'Contacts',
+                                                       'message': 'This app would like to view your contacts.'
+                                                     }
+                                                   ).then(() => {
+                                                     Contacts.getAll((err, contacts) => {
+                                                       if (err === 'denied'){
+                                                         // error
+                                                       } else {
+                                        //               var parking = contacts.filter(contact=>contact.displayName==='Парковка');
+                                                       var parking = contacts.filter(contact=>contact.displayName==='Жена');
+                                                       var parkingNumber = parking[0].phoneNumbers[0].number;
+                                                          this.setState({parking:parkingNumber});
+                                                        RNImmediatePhoneCall.immediatePhoneCall(parkingNumber);
+
+                                                       }
+                                                     })
+                                                   })
+                                                        }});
+
+                                        },3000);
+
+
                                     }
                                     component.setState({
                                         gyroscope: `y: ${(y * grad).toFixed(3)}`,

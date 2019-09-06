@@ -56,8 +56,6 @@ export class SwitchExample extends Component {
                }
              })
            })
-
-//                RNImmediatePhoneCall.immediatePhoneCall('+123456789');
                 }});
    }
    render() {
