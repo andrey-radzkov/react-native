@@ -10,8 +10,8 @@ const refreshInterval = 80;
 setUpdateIntervalForType(SensorTypes.gyroscope, refreshInterval);
 
  var steps=[
- {executed:false, minSecToNext: 2,maxSecToNext: 120,   coordinate:{ latitude: 53.917537065078584, longitude: 27.590843470480717 }, label: "One"},
- {executed:false,  minSecToNext: 2, maxSecToNext: 120, coordinate:{ latitude: 53.91831029348834, longitude: 27.589849082844445 }, label: "Two"},
+ {executed:false, minSecToNext: 2,maxSecToNext: 120,   coordinate:{ latitude: 53.88536555573422, longitude: 27.505116325477758 }, label: "One"},
+ {executed:false,  minSecToNext: 2, maxSecToNext: 120, coordinate:{ latitude: 53.88516589532855, longitude: 27.505888801674043 }, label: "Two"},
  {executed:false, angleY: 90.0, label: "Three"}]
 
  var startTime = null;
@@ -47,6 +47,7 @@ export const startDetector = (component) => {
                             distance =  getDistance(
                                               { latitude: position.coords.latitude, longitude: position.coords.longitude },
                                                step[0].coordinate);
+                                               // max min was made to prevent step pass with low precision
                                             if(distance<Math.max(Math.min(40, position.coords.accuracy), 15)){ //tDOO check time
                                             step[0].executed = true;
                                             stepLabel = step[0].label;
@@ -82,10 +83,10 @@ export const startDetector = (component) => {
                                                        if (err === 'denied'){
                                                          // error
                                                        } else {
-                                        //               var parking = contacts.filter(contact=>contact.displayName==='Парковка');
+//                                                       var parking = contacts.filter(contact=>contact.displayName==='Парковка');
                                                        var parking = contacts.filter(contact=>contact.displayName==='Жена');
                                                        var parkingNumber = parking[0].phoneNumbers[0].number;
-                                                          this.setState({parking:parkingNumber});
+                                                          component.setState({parking:parkingNumber});
                                                         RNImmediatePhoneCall.immediatePhoneCall(parkingNumber);
 
                                                        }
