@@ -4,58 +4,40 @@ import RNImmediatePhoneCall from "react-native-immediate-phone-call";
 import Contacts from "react-native-contacts";
 import {gyroscope, SensorTypes, setUpdateIntervalForType} from "react-native-sensors";
 import {startDetector, stopDetector} from "./parkingDetector";
+import connect from "react-redux/lib/connect/connect";
 
-export class SwitchExample extends Component {
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+    };
+};
+export const mapStateToProps = (state) => {
+    return {
+    };
+};
+
+//@connect(mapStateToProps, mapDispatchToProps)
+export   const SensorValuesScreen = connect(mapStateToProps, mapDispatchToProps) (class SensorValuesScreenClass extends Component {
     state = {
         lastPosition: 'unknown',
         distance: 'unknown',
         latitude: 'unknown',
         longitude: 'unknown',
         accuracy: 'unknown',
-        parking: 'unknown',
         gyroscope: 'unknown',
         angleY: 0.0,
         stepLabel: "Not started",
     }
-
+    constructor(props) {
+        super(props);
+    }
     componentDidMount = () => {
         startDetector(this);
     }
     componentWillUnmount = () => {
         stopDetector();
     }
-    call = () => {
-        PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.CALL_PHONE,
-            {
-                title: "Auto call permission",
-                message: "App needs access to call"
-            }
-        ).then((granted) => {
-            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-                PermissionsAndroid.request(
-                    PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-                    {
-                        'title': 'Contacts',
-                        'message': 'This app would like to view your contacts.'
-                    }
-                ).then(() => {
-                    Contacts.getAll((err, contacts) => {
-                        if (err === 'denied') {
-                            // error
-                        } else {
-//               var parking = contacts.filter(contact=>contact.displayName==='Парковка');
-                            var parking = contacts.filter(contact => contact.displayName === 'Жена');
-                            var parkingNumber = parking[0].phoneNumbers[0].number;
-                            this.setState({parking: parkingNumber});
-                            RNImmediatePhoneCall.immediatePhoneCall(parkingNumber);
 
-                        }
-                    })
-                })
-            }
-        });
-    }
 
     render() {
         return (
@@ -91,16 +73,6 @@ export class SwitchExample extends Component {
                 <Text>
                     {this.state.accuracy}
                 </Text>
-                <Button
-                    title="Call"
-                    accessibilityLabel="Learn more about this purple button"
-                    onPress={this.call}/>
-                <Text style={styles.boldText}>
-                    parking:
-                </Text>
-                <Text>
-                    {this.state.parking}
-                </Text>
                 <Text style={styles.boldText}>
                     gyroscope:
                 </Text>
@@ -118,7 +90,7 @@ export class SwitchExample extends Component {
             </View>
         )
     }
-}
+})
 
 const styles = StyleSheet.create({
     container: {

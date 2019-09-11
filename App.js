@@ -15,14 +15,20 @@ import {
   Text,
   StatusBar,
 } from 'react-native';
-import {SwitchExample} from './src/SwitchExample'
+import {SensorValuesScreen} from './src/SensorValuesScreen'
 import {
   Colors,
 } from 'react-native/Libraries/NewAppScreen';
+import configureStore from "./src/store/configureStore";
+import Provider from "react-redux/lib/components/Provider";
+
 var NativeAppEventEmitter = require('RCTNativeAppEventEmitter');
+const store = configureStore();
 const App = () => {
   return (
+   <Provider store={store}>
     <Fragment>
+
       <StatusBar barStyle="dark-content" />
       <SafeAreaView>
         <ScrollView
@@ -37,12 +43,13 @@ const App = () => {
           <View style={styles.body}>
             <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Auto call parking</Text>
-                <SwitchExample/>
+                <SensorValuesScreen/>
             </View>
           </View>
         </ScrollView>
       </SafeAreaView>
     </Fragment>
+    </Provider>
   );
 };
 
