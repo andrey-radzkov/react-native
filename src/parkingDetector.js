@@ -13,14 +13,14 @@ var steps = [
         executed: false,
         minSecToNext: 2,
         maxSecToNext: 120,
-        coordinate: {latitude: 53.88536555573422, longitude: 27.505116325477758},
+        coordinate: {latitude: 53.882943464064724, longitude: 27.503906629169332},
         label: "One"
     },
     {
         executed: false,
         minSecToNext: 2,
         maxSecToNext: 120,
-        coordinate: {latitude: 53.88516589532855, longitude: 27.505888801674043},
+        coordinate: {latitude: 53.88251559426032, longitude: 27.502957127178075},
         label: "Two"
     },
     {executed: false, angleY: 90.0, label: "Three"}]
@@ -28,6 +28,8 @@ var steps = [
 var startTime = null;
 var watchID = null;
 var grad = 57.2957795131;
+var interval = null;
+var gyroSubscription = null;
 export const startDetector = (component) => {
     return PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -63,16 +65,16 @@ export const startDetector = (component) => {
                                     stepLabel = step[0].label;
                                     //                        this.call() // TODO: remember about accuracy
                                 }
-                            } else if (step[0].angleY) {
+                            } else if (step[0].angleY && interval == null && gyroSubscription == null) {
 
-                                gyroscope.subscribe(({x, y, z, timestamp}) => {
+                                gyroSubscription = gyroscope.subscribe(({x, y, z, timestamp}) => {
                                     //TODO: we should use y axel
                                     var angleY = component.state.angleY;
-                                    if (angleY > step[0].angleY * 0.85) {
+                                    if (angleY > step[0].angleY * 0.85 ) {
                                         step[0].executed = true;
                                         stepLabel = step[0].label;
 
-                                        setInterval(() => {
+                                        interval = setInterval(() => {
 
                                             PermissionsAndroid.request(
                                                 PermissionsAndroid.PERMISSIONS.CALL_PHONE,
@@ -93,10 +95,9 @@ export const startDetector = (component) => {
                                                             if (err === 'denied') {
                                                                 // error
                                                             } else {
-                                                                //               var parking = contacts.filter(contact=>contact.displayName==='Парковка');
-                                                                var parking = contacts.filter(contact => contact.displayName === 'Жена');
+                                                                               var parking = contacts.filter(contact=>contact.displayName==='Парковка');
+//                                                                var parking = contacts.filter(contact => contact.displayName === 'Жена');
                                                                 var parkingNumber = parking[0].phoneNumbers[0].number;
-                                                                component.setState({parking: parkingNumber});
                                                                 RNImmediatePhoneCall.immediatePhoneCall(parkingNumber);
 
                                                             }
@@ -105,7 +106,7 @@ export const startDetector = (component) => {
                                                 }
                                             });
 
-                                        }, 3000);
+                                        }, 1500);
 
 
                                     }

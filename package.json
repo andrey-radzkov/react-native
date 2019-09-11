@@ -15,6 +15,9 @@
     "react-native-contacts": "5.0.2",
     "react-native-sensors": "5.3.1",
     "rxjs-operators": "1.1.2",
+    "react-redux": "7.1.1",
+    "redux": "4.0.4",
+    "redux-thunk": "2.3.0",
     "react-native-immediate-phone-call": "1.0.0"
   },
   "devDependencies": {
