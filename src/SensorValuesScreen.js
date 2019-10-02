@@ -13,6 +13,7 @@ const mapDispatchToProps = (dispatch) => {
 };
 export const mapStateToProps = (state) => {
     return {
+        reducer: state.parkingReducer.reducer
     };
 };
 
@@ -25,6 +26,7 @@ export   const SensorValuesScreen = connect(mapStateToProps, mapDispatchToProps)
         longitude: 'unknown',
         accuracy: 'unknown',
         gyroscope: 'unknown',
+        magnetic: 'unknown',
         angleY: 0.0,
         stepLabel: "Not started",
     }
@@ -78,6 +80,12 @@ export   const SensorValuesScreen = connect(mapStateToProps, mapDispatchToProps)
                 </Text>
                 <Text>
                     {this.state.gyroscope}
+                </Text>
+                <Text style={styles.boldText}>
+                    reducer:
+                </Text>
+                <Text>
+                    {this.props.reducer}
                 </Text>
                 <Text style={styles.boldText}>
                     Angle Y:
