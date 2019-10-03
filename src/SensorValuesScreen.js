@@ -1,114 +1,76 @@
-import React, {Component} from "react";
-import {Button, PermissionsAndroid, StyleSheet, Text, View} from "react-native";
-import RNImmediatePhoneCall from "react-native-immediate-phone-call";
-import Contacts from "react-native-contacts";
-import {gyroscope, SensorTypes, setUpdateIntervalForType} from "react-native-sensors";
+import React, {useEffect} from "react";
+import {StyleSheet, Text, View} from "react-native";
 import {startDetector, stopDetector} from "./parkingDetector";
-import connect from "react-redux/lib/connect/connect";
+import {useDispatch, useSelector} from 'react-redux'
 
-
-const mapDispatchToProps = (dispatch) => {
-    return {
+export const SensorValuesScreen = () => {
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(startDetector());
+    return () => {
+      stopDetector();
     };
+  }, []);
+  const parking = useSelector(state => state.parkingReducer.data);
+
+  return (
+    <View style={styles.container}>
+
+      <Text style={styles.boldText}>
+        Step:
+      </Text>
+      <Text>
+        {parking.stepLabel}
+      </Text>
+      <Text style={styles.boldText}>
+        Distance:
+      </Text>
+      <Text>
+        {parking.distance}
+      </Text>
+      <Text style={styles.boldText}>
+        latitude:
+      </Text>
+      <Text>
+        {parking.latitude}
+      </Text>
+      <Text style={styles.boldText}>
+        longitude:
+      </Text>
+      <Text>
+        {parking.longitude}
+      </Text>
+      <Text style={styles.boldText}>
+        accuracy:
+      </Text>
+      <Text>
+        {parking.accuracy}
+      </Text>
+      <Text style={styles.boldText}>
+        gyroscope:
+      </Text>
+      <Text>
+        {parking.gyroscope}
+      </Text>
+      <Text style={styles.boldText}>
+        Angle Y:
+      </Text>
+      <Text>
+        {parseFloat(parking.angleY).toFixed(3)}
+      </Text>
+    </View>
+  );
 };
-export const mapStateToProps = (state) => {
-    return {
-        reducer: state.parkingReducer.reducer
-    };
-};
-
-//@connect(mapStateToProps, mapDispatchToProps)
-export   const SensorValuesScreen = connect(mapStateToProps, mapDispatchToProps) (class SensorValuesScreenClass extends Component {
-    state = {
-        lastPosition: 'unknown',
-        distance: 'unknown',
-        latitude: 'unknown',
-        longitude: 'unknown',
-        accuracy: 'unknown',
-        gyroscope: 'unknown',
-        magnetic: 'unknown',
-        angleY: 0.0,
-        stepLabel: "Not started",
-    }
-    constructor(props) {
-        super(props);
-    }
-    componentDidMount = () => {
-        startDetector(this);
-    }
-    componentWillUnmount = () => {
-        stopDetector();
-    }
-
-
-    render() {
-        return (
-            <View style={styles.container}>
-
-                <Text style={styles.boldText}>
-                    Step:
-                </Text>
-                <Text>
-                    {this.state.stepLabel}
-                </Text>
-                <Text style={styles.boldText}>
-                    Distance:
-                </Text>
-                <Text>
-                    {this.state.distance}
-                </Text>
-                <Text style={styles.boldText}>
-                    latitude:
-                </Text>
-                <Text>
-                    {this.state.latitude}
-                </Text>
-                <Text style={styles.boldText}>
-                    longitude:
-                </Text>
-                <Text>
-                    {this.state.longitude}
-                </Text>
-                <Text style={styles.boldText}>
-                    accuracy:
-                </Text>
-                <Text>
-                    {this.state.accuracy}
-                </Text>
-                <Text style={styles.boldText}>
-                    gyroscope:
-                </Text>
-                <Text>
-                    {this.state.gyroscope}
-                </Text>
-                <Text style={styles.boldText}>
-                    reducer:
-                </Text>
-                <Text>
-                    {this.props.reducer}
-                </Text>
-                <Text style={styles.boldText}>
-                    Angle Y:
-                </Text>
-                <Text>
-                    {parseFloat(this.state.angleY).toFixed(3)}
-                </Text>
-
-
-            </View>
-        )
-    }
-})
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        alignItems: 'center',
-        marginTop: 50,
-        marginBottom: 50,
-    },
-    boldText: {
-        fontSize: 30,
-        color: 'red',
-    }
-})
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    marginTop: 50,
+    marginBottom: 50,
+  },
+  boldText: {
+    fontSize: 30,
+    color: 'red',
+  }
+});

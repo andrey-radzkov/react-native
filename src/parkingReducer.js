@@ -1,16 +1,17 @@
-export const parkingReducer = (state = { lastPosition: 'unknown',
-                                                distance: 'unknown',
-                                                latitude: 'unknown',
-                                                longitude: 'unknown',
-                                                accuracy: 'unknown',
-                                                gyroscope: 'unknown',
-                                                reducer: 'reducer',
-                                                angleY: 0.0,
-                                                stepLabel: "Not started",}, action) => {
-    switch (action.type) {
-        case 'smth':
-            return {...state, masterData: action.masterData};
-        default:
-            return state;
-    }
+export const parkingReducer = (state = {data:{
+  lastPosition: 'unknown',
+  distance: 'unknown',
+  latitude: 'unknown',
+  longitude: 'unknown',
+  accuracy: 'unknown',
+  gyroscope: 'unknown',
+  angleY: 0.0,
+  stepLabel: "Not started",
+}}, action) => {
+  switch (action.type) {
+    case 'update':
+      return {...state, data: {...state.data, ...action.data}};
+    default:
+      return state;
+  }
 };

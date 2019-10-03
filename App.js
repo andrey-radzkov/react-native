@@ -22,7 +22,7 @@ import {
 import configureStore from "./src/store/configureStore";
 import Provider from "react-redux/lib/components/Provider";
 
-var NativeAppEventEmitter = require('RCTNativeAppEventEmitter');
+// var NativeAppEventEmitter = require('RCTNativeAppEventEmitter');
 const store = configureStore();
 const App = () => {
   return (
