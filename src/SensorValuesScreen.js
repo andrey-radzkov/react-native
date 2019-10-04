@@ -9,7 +9,7 @@ export const SensorValuesScreen = () => {
   const parking = useSelector(state => state.parkingReducer.data);
 
   useEffect(() => {
-    dispatch(startDetector(() => parking));
+    dispatch(startDetector());
     return () => {
       stopDetector();
     };

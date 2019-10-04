@@ -23,14 +23,14 @@ var steps = [
     coordinate: {latitude: 53.88251559426032, longitude: 27.502957127178075},
     label: "Two"
   },
-  {executed: false, angleY: 90.0, label: "Three"}]
+  {executed: false, angleY: 90.0, label: "Three"}];
 
 var startTime = null;
 var watchID = null;
 var grad = 57.2957795131;
 var interval = null;
 var gyroSubscription = null;
-export const startDetector = (getParking) => (dispatch) => {
+export const startDetector = () => (dispatch, state) => {
   return PermissionsAndroid.request(
     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
     {
@@ -69,7 +69,7 @@ export const startDetector = (getParking) => (dispatch) => {
 
                 gyroSubscription = gyroscope.subscribe(({x, y, z, timestamp}) => {
                   //TODO: we should use y axel
-                  var angleY = getParking().angleY;
+                  var angleY = state().parkingReducer.data.angleY;
                   if (angleY > step[0].angleY * 0.85) {
                     step[0].executed = true;
                     stepLabel = step[0].label;
