@@ -50,20 +50,18 @@ export const startDetector = () => (dispatch, state) => {
       );
       watchID = Geolocation.watchPosition((position) => {
           const lastPosition = JSON.stringify(position);
-//                alert("we are in " + lastPosition);
           if (position && position.coords) {
             var step = steps.filter(step => !step.executed);
             var distance = 0;
-            var stepLabel = null
+            var stepLabel = null;
             if (step[0]) {
               if (step[0].coordinate) {
                 distance = getDistance(
                   {latitude: position.coords.latitude, longitude: position.coords.longitude},
                   step[0].coordinate);
-                if (distance < Math.max(Math.min(40, position.coords.accuracy), 15)) { //tDOO check time
+                if (distance < Math.max(Math.min(40, position.coords.accuracy), 15)) { //toDOO check time
                   step[0].executed = true;
                   stepLabel = step[0].label;
-                  //                        this.call() // TODO: remember about accuracy
                 }
               } else if (step[0].angleY && interval == null && gyroSubscription == null) {
 
