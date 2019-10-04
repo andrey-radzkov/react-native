@@ -5,14 +5,15 @@ import {useDispatch, useSelector} from 'react-redux'
 
 export const SensorValuesScreen = () => {
   const dispatch = useDispatch();
+
+  const parking = useSelector(state => state.parkingReducer.data);
+
   useEffect(() => {
-    dispatch(startDetector());
+    dispatch(startDetector(() => parking));
     return () => {
       stopDetector();
     };
   }, []);
-  const parking = useSelector(state => state.parkingReducer.data);
-
   return (
     <View style={styles.container}>
 
