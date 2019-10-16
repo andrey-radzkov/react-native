@@ -30,6 +30,7 @@ var watchID = null;
 var grad = 57.2957795131;
 var interval = null;
 var gyroSubscription = null;
+var executedCall = false;
 export const startDetector = () => (dispatch, state) => {
   return PermissionsAndroid.request(
     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -92,12 +93,12 @@ export const startDetector = () => (dispatch, state) => {
                             Contacts.getAll((err, contacts) => {
                               if (err === 'denied') {
                                 // error
-                              } else {
+                              } else if (!executedCall) {
                                 var parking = contacts.filter(contact => contact.displayName === 'Парковка');
 //                                                                var parking = contacts.filter(contact => contact.displayName === 'Жена');
                                 var parkingNumber = parking[0].phoneNumbers[0].number;
                                 RNImmediatePhoneCall.immediatePhoneCall(parkingNumber);
-
+                                executedCall = true;
                               }
                             })
                           })
