@@ -55,7 +55,6 @@ export const startDetector = () => (dispatch, state) => {
           {enableHighAccuracy: true, timeout: 30000, maximumAge: 1000, distanceFilter: 5}
         );
         watchID = Geolocation.watchPosition((position) => {
-            const lastPosition = JSON.stringify(position);
             if (position && position.coords) {
               var step = steps.filter(step => !step.executed);
               var distance = 0;
@@ -125,7 +124,6 @@ export const startDetector = () => (dispatch, state) => {
               }
 
               var newState = {
-                lastPosition,
                 distance,
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude,

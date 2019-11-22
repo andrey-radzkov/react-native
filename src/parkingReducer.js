@@ -1,5 +1,4 @@
 export const parkingReducer = (state = {data:{
-  lastPosition: 'unknown',
   distance: 'unknown',
   latitude: 'unknown',
   longitude: 'unknown',
