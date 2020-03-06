@@ -6,7 +6,6 @@ export const parkingReducer = (state = {data:{
   gyroscope: 'unknown',
   angleY: 0.0,
   stepLabel: "Not started",
-  accelerometer: "Not started",
 }}, action) => {
   switch (action.type) {
     case 'update':
