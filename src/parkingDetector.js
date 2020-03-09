@@ -1,6 +1,6 @@
 import {PermissionsAndroid} from "react-native";
 import Geolocation from "@react-native-community/geolocation";
-import {gyroscope, accelerometer, magnetometer, SensorTypes, setUpdateIntervalForType} from "react-native-sensors";
+import {accelerometer, gyroscope, magnetometer, SensorTypes, setUpdateIntervalForType} from "react-native-sensors";
 import getDistance from "geolib/es/getDistance";
 import Contacts from "react-native-contacts";
 import RNImmediatePhoneCall from "react-native-immediate-phone-call";
@@ -17,6 +17,8 @@ var watchID = null;
 var grad = (180 / Math.PI);
 var interval = null;
 var gyroSubscription = null;
+var magnetometerSubscription = null;
+var accelerometerSubscription = null;
 var executedCall = false;
 const geolocationDefaultOptions = {enableHighAccuracy: true, timeout: 30000, maximumAge: 1000, distanceFilter: 5};
 
@@ -179,4 +181,7 @@ export const checkPosition = (position) => (dispatch, state) => {
 
 export const stopDetector = () => {
   Geolocation.clearWatch(watchID);
+  magnetometerSubscription != null && magnetometerSubscription.unsubscribe();
+  accelerometerSubscription != null && accelerometerSubscription.unsubscribe();
+  gyroSubscription != null && gyroSubscription.unsubscribe();
 };
