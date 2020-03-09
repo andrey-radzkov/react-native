@@ -1,17 +1,20 @@
 import {PermissionsAndroid} from "react-native";
 import Geolocation from "@react-native-community/geolocation";
-import {gyroscope, SensorTypes, setUpdateIntervalForType} from "react-native-sensors";
+import {gyroscope, accelerometer, magnetometer, SensorTypes, setUpdateIntervalForType} from "react-native-sensors";
 import getDistance from "geolib/es/getDistance";
 import Contacts from "react-native-contacts";
 import RNImmediatePhoneCall from "react-native-immediate-phone-call";
 import {steps} from "./steps.js"
 
 const refreshInterval = 80;
+const refreshIntervalAccelerometer = 200;
 setUpdateIntervalForType(SensorTypes.gyroscope, refreshInterval);
+setUpdateIntervalForType(SensorTypes.accelerometer, refreshIntervalAccelerometer);
+setUpdateIntervalForType(SensorTypes.magnetometer, refreshInterval);
 
 var startTime = null;
 var watchID = null;
-var grad = 57.2957795131;
+var grad = (180 / Math.PI);
 var interval = null;
 var gyroSubscription = null;
 var executedCall = false;
@@ -32,7 +35,11 @@ const updatePosition = (position) => (dispatch) => {
     });
   }
 };
-
+const degree = magnetometer => {
+  return magnetometer - 90 >= 0
+    ? magnetometer - 90
+    : magnetometer + 271;
+};
 export const startDetector = () => (dispatch, state) => {
 
   return PermissionsAndroid.request(
@@ -42,7 +49,27 @@ export const startDetector = () => (dispatch, state) => {
       message: "App needs access to your location"
     }
   ).then((granted) => {
-
+    accelerometer.subscribe(({x, y, z, timestamp}) => {
+      dispatch({
+        type: "update", data: {
+          accelerometer: `x: ${x.toFixed(1)} y: ${y.toFixed(1)} z: ${z.toFixed(1)}}`,
+        }
+      });
+    });
+    magnetometer.subscribe(({x, y, z, timestamp}) => {
+      let angle = 0;
+      if (Math.atan2(y, x) >= 0) {
+        angle = Math.atan2(y, x) * (180 / Math.PI)
+      } else {
+        angle = (Math.atan2(y, x) + 2 * Math.PI) * (180 / Math.PI)
+      }
+      dispatch({
+        type: "update", data: {
+          magnetometer: `x: ${x.toFixed(1)} y: ${y.toFixed(1)} z: ${z.toFixed(1)}}`,
+          angleY: degree(Math.round(angle)),
+        }
+      });
+    });
     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
       //don`t know why we need this but we need...
       Geolocation.getCurrentPosition(

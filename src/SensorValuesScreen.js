@@ -16,7 +16,18 @@ export const SensorValuesScreen = () => {
   }, []);
   return (
     <View style={styles.container}>
-
+      <Text style={styles.boldText}>
+        Accelerometer:
+      </Text>
+      <Text>
+        {parking.accelerometer}
+      </Text>
+      <Text style={styles.boldText}>
+        Magnetometer:
+      </Text>
+      <Text>
+        {parking.magnetometer}
+      </Text>
       <Text style={styles.boldText}>
         Step:
       </Text>
