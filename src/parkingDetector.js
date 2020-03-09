@@ -5,6 +5,7 @@ import getDistance from "geolib/es/getDistance";
 import Contacts from "react-native-contacts";
 import RNImmediatePhoneCall from "react-native-immediate-phone-call";
 import {steps} from "./steps.js"
+import {ACCESS_FINE_LOCATION_MESSAGE, CALL_PERMISSIONS_MESSAGE, CONTACT_PERMISSIONS_MESSAGE} from "./messages";
 
 const refreshInterval = 80;
 const refreshIntervalAccelerometer = 200;
@@ -42,14 +43,12 @@ const degree = magnetometer => {
     ? magnetometer - 90
     : magnetometer + 271;
 };
+
 export const startDetector = () => (dispatch, state) => {
 
   return PermissionsAndroid.request(
     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-    {
-      title: "Location Accessing Permission",
-      message: "App needs access to your location"
-    }
+    ACCESS_FINE_LOCATION_MESSAGE
   ).then((granted) => {
     accelerometer.subscribe(({x, y, z, timestamp}) => {
       dispatch({
@@ -79,7 +78,7 @@ export const startDetector = () => (dispatch, state) => {
           dispatch(updatePosition(position));
         },
         (error) => {
-        } /*alert("initial: " + error.message)*/,
+        },
         geolocationDefaultOptions
       );
       watchID = Geolocation.watchPosition((position) => {
@@ -87,7 +86,7 @@ export const startDetector = () => (dispatch, state) => {
           dispatch(checkPosition(position)); // TODO: refactor
         },
         (error) => {
-        }/*alert("current: " + error.message)*/,
+        },
         geolocationDefaultOptions
       );
     }
@@ -121,18 +120,12 @@ export const checkPosition = (position) => (dispatch, state) => {
 
             PermissionsAndroid.request(
               PermissionsAndroid.PERMISSIONS.CALL_PHONE,
-              {
-                title: "Auto call permission",
-                message: "App needs access to call"
-              }
+              CALL_PERMISSIONS_MESSAGE
             ).then((granted) => {
               if (granted === PermissionsAndroid.RESULTS.GRANTED) {
                 PermissionsAndroid.request(
                   PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-                  {
-                    'title': 'Contacts',
-                    'message': 'This app would like to view your contacts.'
-                  }
+                  CONTACT_PERMISSIONS_MESSAGE
                 ).then(() => {
                   Contacts.getAll((err, contacts) => {
                     if (err === 'denied') {
