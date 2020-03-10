@@ -54,9 +54,7 @@ export const startDetector = () => wrap(async (dispatch, getState) => {
     dispatch({
       type: "update", data: {
         accelerometerString: `x: ${x.toFixed(1)} y: ${y.toFixed(1)} z: ${z.toFixed(1)}`,
-        accelerometerX: x,
-        accelerometerY: y,
-        accelerometerZ: z,
+        accelerometer: {x, y, z}
       }
     });
   });
@@ -65,19 +63,19 @@ export const startDetector = () => wrap(async (dispatch, getState) => {
 
     const parkingReducer = getState().parkingReducer;
     //tODO: more orientations
-    if (parkingReducer.data.accelerometerY >= 7.5) {
+    if (parkingReducer.data.accelerometer.y >= 7.5) {
       if (Math.atan2(-z, x) >= 0) {
         angle = Math.atan2(-z, x) * (180 / Math.PI)
       } else {
         angle = (Math.atan2(-z, x) + 2 * Math.PI) * (180 / Math.PI)
       }
-    } else if (parkingReducer.data.accelerometerZ >= 7.5) {
+    } else if (parkingReducer.data.accelerometer.z >= 7.5) {
       if (Math.atan2(y, x) >= 0) {
         angle = Math.atan2(y, x) * (180 / Math.PI)
       } else {
         angle = (Math.atan2(y, x) + 2 * Math.PI) * (180 / Math.PI)
       }
-    } else if (parkingReducer.data.accelerometerZ <= -7.5) {
+    } else if (parkingReducer.data.accelerometer.z <= -7.5) {
       if (Math.atan2(y, -x) >= 0) {
         angle = Math.atan2(y, -x) * (180 / Math.PI)
       } else {
