@@ -69,17 +69,17 @@ export const startDetector = () => wrap(async (dispatch, getState) => {
       } else {
         angle = (Math.atan2(-z, x) + 2 * Math.PI) * (180 / Math.PI)
       }
-    } else if (parkingReducer.data.accelerometer.z >= 7.5) {
-      if (Math.atan2(y, x) >= 0) {
-        angle = Math.atan2(y, x) * (180 / Math.PI)
-      } else {
-        angle = (Math.atan2(y, x) + 2 * Math.PI) * (180 / Math.PI)
-      }
     } else if (parkingReducer.data.accelerometer.z <= -7.5) {
       if (Math.atan2(y, -x) >= 0) {
         angle = Math.atan2(y, -x) * (180 / Math.PI)
       } else {
         angle = (Math.atan2(y, -x) + 2 * Math.PI) * (180 / Math.PI)
+      }
+    } else /*if (parkingReducer.data.accelerometer.z >= 7.5)*/ {  //tODO: think about default
+      if (Math.atan2(y, x) >= 0) {
+        angle = Math.atan2(y, x) * (180 / Math.PI)
+      } else {
+        angle = (Math.atan2(y, x) + 2 * Math.PI) * (180 / Math.PI)
       }
     }
     dispatch({
