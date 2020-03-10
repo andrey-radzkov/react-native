@@ -44,7 +44,7 @@ const degree = magnetometer => {
     : magnetometer + 271;
 };
 
-export const startDetector = () => wrap(async (dispatch, state) => {
+export const startDetector = () => wrap(async (dispatch, getState) => {
 
   const granted = await PermissionsAndroid.request(
     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -53,25 +53,40 @@ export const startDetector = () => wrap(async (dispatch, state) => {
   accelerometer.subscribe(({x, y, z, timestamp}) => {
     dispatch({
       type: "update", data: {
-        accelerometer: `x: ${x.toFixed(1)} y: ${y.toFixed(1)} z: ${z.toFixed(1)}}`,
+        accelerometerString: `x: ${x.toFixed(1)} y: ${y.toFixed(1)} z: ${z.toFixed(1)}`,
+        accelerometerX: x,
+        accelerometerY: y,
+        accelerometerZ: z,
       }
     });
   });
   magnetometer.subscribe(({x, y, z, timestamp}) => {
     let angle = 0;
-    if (Math.atan2(-z, x) >= 0) {
-      angle = Math.atan2(-z, x) * (180 / Math.PI)
-    } else {
-      angle = (Math.atan2(-z, x) + 2 * Math.PI) * (180 / Math.PI)
+
+    const parkingReducer = getState().parkingReducer;
+    //tODO: more orientations
+    if (parkingReducer.data.accelerometerY >= 7.5) {
+      if (Math.atan2(-z, x) >= 0) {
+        angle = Math.atan2(-z, x) * (180 / Math.PI)
+      } else {
+        angle = (Math.atan2(-z, x) + 2 * Math.PI) * (180 / Math.PI)
+      }
+    } else if (parkingReducer.data.accelerometerZ >= 7.5) {
+      if (Math.atan2(y, x) >= 0) {
+        angle = Math.atan2(y, x) * (180 / Math.PI)
+      } else {
+        angle = (Math.atan2(y, x) + 2 * Math.PI) * (180 / Math.PI)
+      }
+    } else if (parkingReducer.data.accelerometerZ <= -7.5) {
+      if (Math.atan2(y, -x) >= 0) {
+        angle = Math.atan2(y, -x) * (180 / Math.PI)
+      } else {
+        angle = (Math.atan2(y, -x) + 2 * Math.PI) * (180 / Math.PI)
+      }
     }
-    // if (Math.atan2(y, x) >= 0) {
-    //   angle = Math.atan2(y, x) * (180 / Math.PI)
-    // } else {
-    //   angle = (Math.atan2(y, x) + 2 * Math.PI) * (180 / Math.PI)
-    // }
     dispatch({
       type: "update", data: {
-        magnetometer: `x: ${x.toFixed(1)} y: ${y.toFixed(1)} z: ${z.toFixed(1)}}`,
+        magnetometer: `x: ${x.toFixed(1)} y: ${y.toFixed(1)} z: ${z.toFixed(1)}`,
         angleY: degree(Math.round(angle)),
       }
     });
@@ -95,9 +110,7 @@ export const startDetector = () => wrap(async (dispatch, state) => {
       geolocationDefaultOptions
     );
   }
-  // });
-  await new Promise(resolve => setImmediate(resolve));
-  throw new Error('Oops!');
+  return await new Promise(resolve => setImmediate(resolve));
 });
 
 
@@ -184,8 +197,6 @@ export const stopDetector = () => {
   gyroSubscription != null && gyroSubscription.unsubscribe();
 };
 
-function wrap(fn) {
-  return function (dispatch) {
-    fn(dispatch).catch(error => dispatch({type: 'ERROR', error}));
-  };
+const wrap = (fn) => (dispatch, getState) => {
+  return fn(dispatch, getState).catch(error => dispatch({type: 'ERROR', error}));
 }

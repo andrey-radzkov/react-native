@@ -20,7 +20,7 @@ export const SensorValuesScreen = () => {
         Accelerometer:
       </Text>
       <Text>
-        {parking.accelerometer}
+        {parking.accelerometerString}
       </Text>
       <Text style={styles.boldText}>
         Magnetometer:
