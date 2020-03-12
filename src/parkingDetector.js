@@ -1,11 +1,12 @@
 import {PermissionsAndroid} from "react-native";
 import Geolocation from "@react-native-community/geolocation";
-import {accelerometer, gyroscope, magnetometer, SensorTypes, setUpdateIntervalForType} from "react-native-sensors";
+import {accelerometer, gyroscope, SensorTypes, setUpdateIntervalForType} from "react-native-sensors";
 import getDistance from "geolib/es/getDistance";
 import Contacts from "react-native-contacts";
 import RNImmediatePhoneCall from "react-native-immediate-phone-call";
 import {steps} from "./steps.js"
 import {ACCESS_FINE_LOCATION_MESSAGE, CALL_PERMISSIONS_MESSAGE, CONTACT_PERMISSIONS_MESSAGE} from "./messages";
+import {MAX_PRECISION, MIN_PRECISION} from "./steps";
 
 const refreshInterval = 80;
 const refreshIntervalAccelerometer = 200;
@@ -23,9 +24,6 @@ var accelerometerSubscription = null;
 var executedCall = false;
 const geolocationDefaultOptions = {enableHighAccuracy: true, timeout: 30000, maximumAge: 1000, distanceFilter: 5};
 
-const MAX_PRECISION = 40;
-const MIN_PRECISION = 15;
-
 const updatePosition = (position) => (dispatch) => {
   if (position && position.coords) {
     dispatch({
@@ -38,12 +36,7 @@ const updatePosition = (position) => (dispatch) => {
     });
   }
 };
-const degree = magnetometer => {
-  return magnetometer - 90 >= 0
-    ? magnetometer - 90
-    : magnetometer + 271;
-};
-
+const G = 9.8;
 export const startDetector = () => wrap(async (dispatch, getState) => {
 
   const granted = await PermissionsAndroid.request(
@@ -58,37 +51,7 @@ export const startDetector = () => wrap(async (dispatch, getState) => {
       }
     });
   });
-  magnetometer.subscribe(({x, y, z, timestamp}) => {
-    let angle = 0;
 
-    const parkingReducer = getState().parkingReducer;
-    //tODO: more orientations
-    if (parkingReducer.data.accelerometer.y >= 7.5) {
-      if (Math.atan2(-z, x) >= 0) {
-        angle = Math.atan2(-z, x) * (180 / Math.PI)
-      } else {
-        angle = (Math.atan2(-z, x) + 2 * Math.PI) * (180 / Math.PI)
-      }
-    } else if (parkingReducer.data.accelerometer.z <= -7.5) {
-      if (Math.atan2(y, -x) >= 0) {
-        angle = Math.atan2(y, -x) * (180 / Math.PI)
-      } else {
-        angle = (Math.atan2(y, -x) + 2 * Math.PI) * (180 / Math.PI)
-      }
-    } else /*if (parkingReducer.data.accelerometer.z >= 7.5)*/ {  //tODO: think about default
-      if (Math.atan2(y, x) >= 0) {
-        angle = Math.atan2(y, x) * (180 / Math.PI)
-      } else {
-        angle = (Math.atan2(y, x) + 2 * Math.PI) * (180 / Math.PI)
-      }
-    }
-    dispatch({
-      type: "update", data: {
-        magnetometer: `x: ${x.toFixed(1)} y: ${y.toFixed(1)} z: ${z.toFixed(1)}`,
-        angleY: degree(Math.round(angle)),
-      }
-    });
-  });
   if (granted === PermissionsAndroid.RESULTS.GRANTED) {
     //don`t know why we need this but we need...
     Geolocation.getCurrentPosition(
@@ -127,8 +90,12 @@ export const checkPosition = (position) => (dispatch, state) => {
   } else if (step[0] && step[0].angleY && interval == null && gyroSubscription == null) {
 
     gyroSubscription = gyroscope.subscribe(({x, y, z, timestamp}) => {
-      //TODO: we should use y axel
-      var angleY = state().parkingReducer.data.angleY;
+      //TODO: use z and y
+      var accelerometer = getState().parkingReducer.data.accelerometer;
+      var angleY = getState().parkingReducer.data.angleY;
+      const deltaAngleY = (z * grad) * (1.0 / (1000 / refreshInterval)) * (accelerometer.z / G) +
+        (y * grad) * (1.0 / (1000 / refreshInterval)) * (accelerometer.y / G);
+      angleY += deltaAngleY;
       if (angleY > step[0].angleY * 0.85) {
         step[0].executed = true;
         stepLabel = step[0].label;
@@ -169,7 +136,7 @@ export const checkPosition = (position) => (dispatch, state) => {
       dispatch({
         type: "update", data: {
           gyroscope: `y: ${(y * grad).toFixed(3)}`,
-          angleY: (angleY + (y * grad) * (1.0 / (1000 / refreshInterval)))
+          angleY: angleY
         }
       });
     });

@@ -1,3 +1,5 @@
+export const MAX_PRECISION = 40;
+export const MIN_PRECISION = 15;
 export var steps = [
   {
     executed: false,
