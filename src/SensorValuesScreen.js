@@ -22,12 +22,16 @@ export const SensorValuesScreen = () => {
       <Text>
         {parking.accelerometerString}
       </Text>
-      <Text style={styles.boldText}>
-        Magnetometer:
-      </Text>
-      <Text>
-        {parking.magnetometer}
-      </Text>
+      {parking.magnetometer !== 'unknown' &&
+      <View>
+        <Text style={styles.boldText}>
+          Magnetometer:
+        </Text>
+        <Text>
+          {parking.magnetometer}
+        </Text>
+      </View>
+      }
       <Text style={styles.boldText}>
         Step:
       </Text>
