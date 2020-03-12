@@ -14,10 +14,8 @@ setUpdateIntervalForType(SensorTypes.gyroscope, refreshInterval);
 setUpdateIntervalForType(SensorTypes.accelerometer, refreshIntervalAccelerometer);
 setUpdateIntervalForType(SensorTypes.magnetometer, refreshInterval);
 
-var startTime = null;
 var watchID = null;
 var grad = (180 / Math.PI);
-var interval = null;
 var gyroSubscription = null;
 var magnetometerSubscription = null;
 var accelerometerSubscription = null;
@@ -82,7 +80,7 @@ const updatePosition = (position) => (dispatch) => {
   }
 };
 
-const checkPosition = (position) => (dispatch, state) => {
+const checkPosition = (position) => wrap(async (dispatch, getState) => {
   var step = steps.filter(step => !step.executed);
   var distance = 0;
   var stepLabel = null;
@@ -93,9 +91,8 @@ const checkPosition = (position) => (dispatch, state) => {
     if (distance < Math.max(Math.min(MAX_PRECISION, position.coords.accuracy), MIN_PRECISION)) { //toDO check time
       stepLabel = passStep(step);
     }
-  } else if (step[0] && step[0].angleY && interval == null && gyroSubscription == null) {
-
-    gyroSubscription = gyroscope.subscribe(({x, y, z, timestamp}) => {
+  } else if (step[0] && step[0].angleY && gyroSubscription == null) {
+    gyroSubscription = gyroscope.subscribe(async ({x, y, z, timestamp}) => {
       //TODO: use z and y
       var accelerometer = getState().parkingReducer.data.accelerometer;
       var angleY = getState().parkingReducer.data.angleY;
@@ -103,7 +100,7 @@ const checkPosition = (position) => (dispatch, state) => {
       angleY += deltaAngleY;
       if (angleY > step[0].angleY * 0.85) {
         stepLabel = passStep(step);
-        callToParking();
+        await callToParking();
       }
       dispatch({
         type: "update", data: {
@@ -125,42 +122,44 @@ const checkPosition = (position) => (dispatch, state) => {
     newState.stepLabel = stepLabel;
   }
   dispatch({type: "update", data: newState});
-};
+  return await new Promise(resolve => setImmediate(resolve));
+});
 
 const radToGrad = (z) => {
   return (z * grad) * (1.0 / (1000 / refreshInterval));
 }
 
-const callToParking = () => {
-  interval = setInterval(() => {
-    PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.CALL_PHONE,
-      CALL_PERMISSIONS_MESSAGE
-    ).then((granted) => {
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-          CONTACT_PERMISSIONS_MESSAGE
-        ).then(() => {
-          Contacts.getAll((err, contacts) => {
-            if (err === 'denied') {
-              // error
-            } else if (!executedCall) {
-              var parking = contacts.filter(contact => contact.displayName === 'Парковка');
-//                       var parking = contacts.filter(contact => contact.displayName === 'Жена');
-              var parkingNumber = parking[0].phoneNumbers[0].number;
-              RNImmediatePhoneCall.immediatePhoneCall(parkingNumber);
-              if (gyroSubscription != null) {
-                gyroSubscription.unsubscribe();
-              }
-              executedCall = true;
-            }
-          })
-        })
-      }
-    });
+async function delay(ms) {
+  // return await for better async stack trace support in case of errors.
+  return await new Promise(resolve => setTimeout(resolve, ms));
+}
 
-  }, 1500);
+const callToParking = async () => {
+  delay(1500);
+  const contactsGranted = await PermissionsAndroid.request(
+    PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+    CONTACT_PERMISSIONS_MESSAGE
+  )
+  const callGranted = await PermissionsAndroid.request(
+    PermissionsAndroid.PERMISSIONS.CALL_PHONE,
+    CALL_PERMISSIONS_MESSAGE
+  )
+  if (callGranted === PermissionsAndroid.RESULTS.GRANTED && contactsGranted === PermissionsAndroid.RESULTS.GRANTED) {
+    Contacts.getAll((err, contacts) => {
+      if (err === 'denied') {
+        // error
+      } else if (!executedCall) {
+        var parking = contacts.filter(contact => contact.displayName === 'Парковка');
+//                       var parking = contacts.filter(contact => contact.displayName === 'Жена');
+        var parkingNumber = parking[0].phoneNumbers[0].number;
+        RNImmediatePhoneCall.immediatePhoneCall(parkingNumber);
+        if (gyroSubscription != null) {
+          gyroSubscription.unsubscribe();
+        }
+        executedCall = true;
+      }
+    })
+  }
 }
 
 const passStep = (step) => {
