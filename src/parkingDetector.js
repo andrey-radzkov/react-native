@@ -9,7 +9,7 @@ import {ACCESS_FINE_LOCATION_MESSAGE, CALL_PERMISSIONS_MESSAGE, CONTACT_PERMISSI
 import {MAX_PRECISION, MIN_PRECISION} from "./steps";
 
 const refreshInterval = 80;
-const refreshIntervalAccelerometer = 200;
+const refreshIntervalAccelerometer = 300;
 setUpdateIntervalForType(SensorTypes.gyroscope, refreshInterval);
 setUpdateIntervalForType(SensorTypes.accelerometer, refreshIntervalAccelerometer);
 setUpdateIntervalForType(SensorTypes.magnetometer, refreshInterval);
@@ -23,20 +23,8 @@ var magnetometerSubscription = null;
 var accelerometerSubscription = null;
 var executedCall = false;
 const geolocationDefaultOptions = {enableHighAccuracy: true, timeout: 30000, maximumAge: 1000, distanceFilter: 5};
-
-const updatePosition = (position) => (dispatch) => {
-  if (position && position.coords) {
-    dispatch({
-      type: "update", data: {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: `real: ${position.coords.accuracy}; my: ${Math.max(Math.min(MAX_PRECISION, position.coords.accuracy),
-          MIN_PRECISION)}`
-      }
-    });
-  }
-};
 const G = 9.8;
+
 export const startDetector = () => wrap(async (dispatch, getState) => {
 
   const granted = await PermissionsAndroid.request(
@@ -74,8 +62,27 @@ export const startDetector = () => wrap(async (dispatch, getState) => {
   return await new Promise(resolve => setImmediate(resolve));
 });
 
+export const stopDetector = () => {
+  Geolocation.clearWatch(watchID);
+  magnetometerSubscription != null && magnetometerSubscription.unsubscribe();
+  accelerometerSubscription != null && accelerometerSubscription.unsubscribe();
+  gyroSubscription != null && gyroSubscription.unsubscribe();
+};
 
-export const checkPosition = (position) => (dispatch, state) => {
+const updatePosition = (position) => (dispatch) => {
+  if (position && position.coords) {
+    dispatch({
+      type: "update", data: {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: `real: ${position.coords.accuracy}; my: ${Math.max(Math.min(MAX_PRECISION, position.coords.accuracy),
+          MIN_PRECISION)}`
+      }
+    });
+  }
+};
+
+const checkPosition = (position) => (dispatch, state) => {
   var step = steps.filter(step => !step.executed);
   var distance = 0;
   var stepLabel = null;
@@ -83,9 +90,8 @@ export const checkPosition = (position) => (dispatch, state) => {
     distance = getDistance(
       {latitude: position.coords.latitude, longitude: position.coords.longitude},
       step[0].coordinate);
-    if (distance < Math.max(Math.min(MAX_PRECISION, position.coords.accuracy), MIN_PRECISION)) { //toDOO check time
-      step[0].executed = true;
-      stepLabel = `${step[0].label} passed`;
+    if (distance < Math.max(Math.min(MAX_PRECISION, position.coords.accuracy), MIN_PRECISION)) { //toDO check time
+      stepLabel = passStep(step);
     }
   } else if (step[0] && step[0].angleY && interval == null && gyroSubscription == null) {
 
@@ -93,45 +99,11 @@ export const checkPosition = (position) => (dispatch, state) => {
       //TODO: use z and y
       var accelerometer = getState().parkingReducer.data.accelerometer;
       var angleY = getState().parkingReducer.data.angleY;
-      const deltaAngleY = (z * grad) * (1.0 / (1000 / refreshInterval)) * (accelerometer.z / G) +
-        (y * grad) * (1.0 / (1000 / refreshInterval)) * (accelerometer.y / G);
+      const deltaAngleY = radToGrad(z) * (accelerometer.z / G) + radToGrad(y) * (accelerometer.y / G);
       angleY += deltaAngleY;
       if (angleY > step[0].angleY * 0.85) {
-        step[0].executed = true;
-        stepLabel = step[0].label;
-
-        interval = setInterval(() => {
-
-          PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.CALL_PHONE,
-            CALL_PERMISSIONS_MESSAGE
-          ).then((granted) => {
-            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-              PermissionsAndroid.request(
-                PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-                CONTACT_PERMISSIONS_MESSAGE
-              ).then(() => {
-                Contacts.getAll((err, contacts) => {
-                  if (err === 'denied') {
-                    // error
-                  } else if (!executedCall) {
-                    var parking = contacts.filter(contact => contact.displayName === 'Парковка');
-//                       var parking = contacts.filter(contact => contact.displayName === 'Жена');
-                    var parkingNumber = parking[0].phoneNumbers[0].number;
-                    RNImmediatePhoneCall.immediatePhoneCall(parkingNumber);
-                    if (gyroSubscription != null) {
-                      gyroSubscription.unsubscribe();
-                    }
-                    executedCall = true;
-                  }
-                })
-              })
-            }
-          });
-
-        }, 1500);
-
-
+        stepLabel = passStep(step);
+        callToParking();
       }
       dispatch({
         type: "update", data: {
@@ -155,12 +127,46 @@ export const checkPosition = (position) => (dispatch, state) => {
   dispatch({type: "update", data: newState});
 };
 
-export const stopDetector = () => {
-  Geolocation.clearWatch(watchID);
-  magnetometerSubscription != null && magnetometerSubscription.unsubscribe();
-  accelerometerSubscription != null && accelerometerSubscription.unsubscribe();
-  gyroSubscription != null && gyroSubscription.unsubscribe();
-};
+const radToGrad = (z) => {
+  return (z * grad) * (1.0 / (1000 / refreshInterval));
+}
+
+const callToParking = () => {
+  interval = setInterval(() => {
+    PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.CALL_PHONE,
+      CALL_PERMISSIONS_MESSAGE
+    ).then((granted) => {
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+          CONTACT_PERMISSIONS_MESSAGE
+        ).then(() => {
+          Contacts.getAll((err, contacts) => {
+            if (err === 'denied') {
+              // error
+            } else if (!executedCall) {
+              var parking = contacts.filter(contact => contact.displayName === 'Парковка');
+//                       var parking = contacts.filter(contact => contact.displayName === 'Жена');
+              var parkingNumber = parking[0].phoneNumbers[0].number;
+              RNImmediatePhoneCall.immediatePhoneCall(parkingNumber);
+              if (gyroSubscription != null) {
+                gyroSubscription.unsubscribe();
+              }
+              executedCall = true;
+            }
+          })
+        })
+      }
+    });
+
+  }, 1500);
+}
+
+const passStep = (step) => {
+  step[0].executed = true;
+  return `${step[0].label} passed`;
+}
 
 const wrap = (fn) => (dispatch, getState) => {
   return fn(dispatch, getState).catch(error => dispatch({type: 'ERROR', error}));
