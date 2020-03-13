@@ -5,8 +5,8 @@ import getDistance from "geolib/es/getDistance";
 import Contacts from "react-native-contacts";
 import RNImmediatePhoneCall from "react-native-immediate-phone-call";
 import {steps} from "./steps.js"
-import {ACCESS_FINE_LOCATION_MESSAGE, CALL_PERMISSIONS_MESSAGE, CONTACT_PERMISSIONS_MESSAGE} from "./messages";
 import {MAX_PRECISION, MIN_PRECISION} from "./steps";
+import {executeWithPermissions} from "./permissions";
 
 const refreshInterval = 80;
 const refreshIntervalAccelerometer = 300;
@@ -25,38 +25,35 @@ const G = 9.8;
 
 export const startDetector = () => wrap(async (dispatch, getState) => {
 
-  const granted = await PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-    ACCESS_FINE_LOCATION_MESSAGE
-  );
-  accelerometer.subscribe(({x, y, z, timestamp}) => {
-    dispatch({
-      type: "update", data: {
-        accelerometerString: `x: ${x.toFixed(1)} y: ${y.toFixed(1)} z: ${z.toFixed(1)}`,
-        accelerometer: {x, y, z}
-      }
-    });
-  });
+  await executeWithPermissions(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+    () => {
+      accelerometer.subscribe(({x, y, z, timestamp}) => {
+        dispatch({
+          type: "update", data: {
+            accelerometerString: `x: ${x.toFixed(1)} y: ${y.toFixed(1)} z: ${z.toFixed(1)}`,
+            accelerometer: {x, y, z}
+          }
+        });
+      });
 
-  if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-    //don`t know why we need this but we need...
-    Geolocation.getCurrentPosition(
-      (position) => {
-        dispatch(updatePosition(position));
-      },
-      (error) => {
-      },
-      geolocationDefaultOptions
-    );
-    watchID = Geolocation.watchPosition((position) => {
-        dispatch(updatePosition(position));
-        dispatch(checkPosition(position)); // TODO: refactor
-      },
-      (error) => {
-      },
-      geolocationDefaultOptions
-    );
-  }
+      //don`t know why we need this but we need...
+      Geolocation.getCurrentPosition(
+        (position) => {
+          dispatch(updatePosition(position));
+        },
+        (error) => {
+        },
+        geolocationDefaultOptions
+      );
+      watchID = Geolocation.watchPosition((position) => {
+          dispatch(updatePosition(position));
+          dispatch(checkPosition(position)); // TODO: refactor
+        },
+        (error) => {
+        },
+        geolocationDefaultOptions
+      );
+    });
   return await new Promise(resolve => setImmediate(resolve));
 });
 
@@ -136,30 +133,24 @@ async function delay(ms) {
 
 const callToParking = async () => {
   delay(1500);
-  const contactsGranted = await PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-    CONTACT_PERMISSIONS_MESSAGE
-  )
-  const callGranted = await PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.CALL_PHONE,
-    CALL_PERMISSIONS_MESSAGE
-  )
-  if (callGranted === PermissionsAndroid.RESULTS.GRANTED && contactsGranted === PermissionsAndroid.RESULTS.GRANTED) {
-    Contacts.getAll((err, contacts) => {
-      if (err === 'denied') {
-        // error
-      } else if (!executedCall) {
-        var parking = contacts.filter(contact => contact.displayName === 'Парковка');
-//                       var parking = contacts.filter(contact => contact.displayName === 'Жена');
-        var parkingNumber = parking[0].phoneNumbers[0].number;
-        RNImmediatePhoneCall.immediatePhoneCall(parkingNumber);
-        if (gyroSubscription != null) {
-          gyroSubscription.unsubscribe();
+  await executeWithPermissions(
+    [PermissionsAndroid.PERMISSIONS.READ_CONTACTS, PermissionsAndroid.PERMISSIONS.CALL_PHONE],
+    () => {
+      Contacts.getAll((err, contacts) => {
+
+        if (err === 'denied') {
+          // error
+        } else if (!executedCall) {
+          var parking = contacts.filter(contact => contact.displayName === 'Парковка');
+          var parkingNumber = parking[0].phoneNumbers[0].number;
+          RNImmediatePhoneCall.immediatePhoneCall(parkingNumber);
+          if (gyroSubscription != null) {
+            gyroSubscription.unsubscribe();
+          }
+          executedCall = true;
         }
-        executedCall = true;
-      }
-    })
-  }
+      })
+    });
 }
 
 const passStep = (step) => {
