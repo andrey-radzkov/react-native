@@ -27,6 +27,7 @@ export const startDetector = () => wrap(async (dispatch, getState) => {
 
   await executeWithPermissions(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
     () => {
+      //TODO: subscribe more accurate to decrease battery degradation
       accelerometer.subscribe(({x, y, z, timestamp}) => {
         dispatch({
           type: "update", data: {
