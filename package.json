@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "react": "16.10.1",
-    "react-native": "0.61.1",
+    "react-native": "0.62.3",
     "@react-native-community/geolocation": "2.0.2",
     "geolib": "3.0.4",
     "react-native-contacts": "5.0.2",
